@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"./src/index.js","loc":{"line":1,"column":29}}],"generated":{"js":"var MapboxWrapper = require( './src/index.js' );\r\n\r\n// 使用的是commomjs的规范，模块内的东西都是私有的，所以在dev.html的script中读不到MapboxWrapper\r\nwindow.MapboxWrapper = MapboxWrapper;\r\n"},"hash":"2f8a6904b6e5088cb2b8c6319638e458"}

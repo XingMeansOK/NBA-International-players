@@ -1,0 +1,8 @@
+{
+  "name": "NBA-International-players",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/XingMeansOK/NBA-International-players.git",
+  "author": "XingMeansOK <771267736@qq.com>",
+  "license": "MIT"
+}
