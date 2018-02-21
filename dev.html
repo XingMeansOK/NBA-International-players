@@ -32,13 +32,16 @@
 
       map.on( 'load', function() {
         var wrapper = new MapboxWrapper( map );
-        var geometry = new THREE.BoxGeometry( 100, 100, 100 );
-        var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-        var cube = new THREE.Mesh( geometry, material );
-        var planePosition = [ -122.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
+        // var geometry = new THREE.BoxGeometry( 100, 100, 100 );
+        // var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+        // var cube = new THREE.Mesh( geometry, material );
+        // var planePosition = [ -122.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
+        //
+        // // Add the model to the threebox scenegraph at a specific geographic coordinate
+        // wrapper.addAtCoordinate(cube, planePosition, {scaleToLatitude: true, preScale: 20000});
 
-        // Add the model to the threebox scenegraph at a specific geographic coordinate
-        wrapper.addAtCoordinate(cube, planePosition, {scaleToLatitude: true, preScale: 20000});
+        wrapper.addPillarLayer();
+        
       } )
 
 
