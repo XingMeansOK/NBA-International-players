@@ -1,3 +1,5 @@
+// 在同一个函数内同步mvp矩阵的备份，已经废弃了
+
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 var LayerContainer = require( './layercontainer.js' );

@@ -2,7 +2,7 @@ var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 var LayerContainer = require( './layercontainer.js' );
 var AutoCamera = require( './autocamera.js' );
-var PillarLayer = require( './layers/pillarlayer.js' );
+// var PillarLayer = require( './layers/pillarlayer.js' );
 
 /*
   MapboxWrapper:  mapboxgl.Map的包装类
@@ -91,6 +91,7 @@ Object.assign( MapboxWrapper.prototype, {
 
   }(),
 
+  // 迁移至LayerContainer
   /*
     在指定位置添加three要素
     @param obj:Mesh
@@ -109,6 +110,7 @@ Object.assign( MapboxWrapper.prototype, {
 
        return obj;
    },
+   // 迁移至LayerContainer
    moveToCoordinate: function(obj, lnglat, options) {
        /** Place the given object on the map, centered around the provided longitude and latitude
            The object's internal coordinates are assumed to be in meter-offset format, meaning
@@ -150,11 +152,13 @@ Object.assign( MapboxWrapper.prototype, {
        return obj;
    },
 
+   // 迁移至LayerContainer
    projectedUnitsPerMeter: function(latitude) {
        return Math.abs( 512 * ( 1 / Math.cos( latitude * Math.PI / 180 ) ) / 40075000 );
        // 40075000是地球周长（单位米）
    },
 
+   // 迁移至LayerContainer
    projectToWorld: function (coords){
        // Spherical mercator forward projection, re-scaling to WORLD_SIZE
        /*
@@ -201,8 +205,20 @@ Object.assign( MapboxWrapper.prototype, {
 
    },
 
-   /************test************/
-   addLayer: function() {
+   /*
+      添加柱状图层
+      @param options:Object
+   */
+   addLayer: function( options ) {
+
+     //
+     var subclasses = {
+
+      'pillarlayer': require('./layers/pillarlayer.js'),
+
+     };
+
+     this.layerContainer.add( new subclasses[ options.type ]( options ) )
 
    }
 

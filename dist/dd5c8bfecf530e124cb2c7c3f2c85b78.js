@@ -69,7 +69,7 @@ require = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({4:[function(require,module,exports) {
+})({8:[function(require,module,exports) {
 var global = (1,eval)("this");
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -46055,7 +46055,7 @@ var global = (1,eval)("this");
 
 })));
 
-},{}],5:[function(require,module,exports) {
+},{}],7:[function(require,module,exports) {
 var WORLD_SIZE = 512;
 var MERCATOR_A = 6378137.0;
 
@@ -46070,7 +46070,7 @@ var constants = {
 
 module.exports = constants;
 
-},{}],6:[function(require,module,exports) {
+},{}],5:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 
@@ -46149,7 +46149,7 @@ LayerContainer.prototype = Object.assign( Object.create( THREE.Group.prototype )
 
 module.exports = LayerContainer;
 
-},{"./lib/three.js":4,"./constant.js":5}],7:[function(require,module,exports) {
+},{"./lib/three.js":8,"./constant.js":7}],6:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 
 /*
@@ -46281,7 +46281,7 @@ AutoCamera.prototype = Object.assign( Object.create( THREE.PerspectiveCamera.pro
 
 module.exports = AutoCamera;
 
-},{"./lib/three.js":4}],9:[function(require,module,exports) {
+},{"./lib/three.js":8}],10:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 
@@ -46298,12 +46298,13 @@ Layer.prototype = Object.assign( Object.create( THREE.Group.prototype ), {
 
   constructor: Layer,
 
-  /*
-    在指定位置添加three要素
-    @param obj:Mesh
-    @param lnglat: Array 经纬度
-    @param options: Object
-  */
+  /**
+   * 在指定位置添加three要素
+   * @param  {Object} obj     [Mesh]
+   * @param  {Array} lnglat  [经纬度]
+   * @param  {Object} options [description]
+   * @return {[type]}         [description]
+   */
   addAtCoordinate: function(obj, lnglat, options) {
        var geoGroup = new THREE.Group();
        geoGroup.userData.isGeoGroup = true;
@@ -46359,7 +46360,9 @@ Layer.prototype = Object.assign( Object.create( THREE.Group.prototype ), {
    },
 
    projectedUnitsPerMeter: function(latitude) {
-       return Math.abs( 512 * ( 1 / Math.cos( latitude * Math.PI / 180 ) ) / 40075000 );
+     // 纬度越高放大越多
+       // return Math.abs( 512 * ( 1 / Math.cos( latitude * Math.PI / 180 ) ) / 40075000 );
+       return Math.abs( 512 * ( 1 / Math.cos( 45 * Math.PI / 180 ) ) / 40075000 );
        // 40075000是地球周长（单位米）
    },
 
@@ -46399,11 +46402,82 @@ Layer.prototype = Object.assign( Object.create( THREE.Group.prototype ), {
        return result;
    },
 
+   getJSON: function() {
+
+     /**
+      * 生成一个XMLHttpRequest请求
+      * @param  {Object} requestParameters 请求参数
+      * @return {Object} 返回请求对象
+      */
+     function createRequest( requestParameters ) {
+       var xhr = new window.XMLHttpRequest();
+       xhr.open('GET', requestParameters.url, true);
+       for (var k in requestParameters.headers) {
+         xhr.setRequestHeader(k, requestParameters.headers[k]);
+       }
+
+       // 如果为true，则允许CORS请求发送cookie到服务器  详见 http://www.ruanyifeng.com/blog/2016/04/cors.html
+       xhr.withCredentials = requestParameters.credentials === 'include';
+       return xhr;
+     }
+
+     /**
+      * 读取一个json文件
+      * @param  {Object}   requestParameters 请求参数
+      * @param  {Function} callback          回调函数
+      * @return {[type]}                     [description]
+      *
+      * @example getJSON( { url:'./XXX.json' }, function( err, data ){ ... } )
+      */
+     return function( requestParameters, callback ) {
+
+       var xhr = createRequest( requestParameters );
+       xhr.setRequestHeader('Accept', 'application/json');
+       xhr.onerror = function() {
+         callback( new Error( xhr.statusText ) );
+       };
+       xhr.onload = function() {
+          // 成功执行区域
+          // 2XX表示有效响应
+          // 304意味着是从缓存读取
+         if ( xhr.status >= 200 && xhr.status < 300 && xhr.response ) { // 请求成功
+           var data;
+           try {
+             data = JSON.parse( xhr.response );
+           } catch ( err ) {
+             return callback( err );
+           }
+           callback( null, data );
+         } else { // 请求失败
+           callback( new AJAXError( xhr.statusText, xhr.status ) );
+         }
+       };
+       xhr.send();
+       return xhr;
+     }
+
+   }(),
+
+
+
 } )
+
+/**
+ * Ajax请求错误对象
+ * @param       {string} message 关于错误的描述
+ * @param       {number} status  响应状态码
+ * @constructor
+ */
+function AJAXError( message, status ) {
+  Error.call( this, message );
+  this.status = status;
+}
+
+AJAXError.prototype = Object.create( Error.prototype );
 
 module.exports = Layer;
 
-},{"./lib/three.js":4,"./constant.js":5}],10:[function(require,module,exports) {
+},{"./lib/three.js":8,"./constant.js":7}],11:[function(require,module,exports) {
 /*!
 * TweenJS
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -50242,29 +50316,45 @@ this.createjs = this.createjs || {};
 
 module.exports = this.createjs;
 
-},{}],8:[function(require,module,exports) {
+},{}],9:[function(require,module,exports) {
 var THREE = require( '../lib/three.js' );
 var Layer = require( '../layer.js' );
 var createjs = require( '../lib/tweenjs.js' );
 
-/*
-  柱子图层，继承自layer
-*/
+/**
+ * 柱子图层，继承自layer
+ * @param       {Object} options 添加图层的数据参数 属性格式参考Mapboxgl 的style layers  https://www.mapbox.com/mapbox-gl-js/style-spec/#layers
+ * @constructor
+ * @example   options { id: 'XX', type: 'pillarlayer'
+                         source:{
+                           type:"geojson",
+                           data:"./XX.geojson" 文件的位置
+                         }
+                       }
+ *
+ * 如果可视化都集中在一个很小的区域，柱子的粗细就要随之变小
+ */
 function PillarLayer( options ) {
 
   Layer.call( this );
 
-  var pillar = new Pillar( 3000000 );
-  var planePosition = [ -102.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
-  this.addAtCoordinate(pillar, planePosition, {scaleToLatitude: true});
+  // 请求参数
+  var requestParameters = {
+    url: options.source.data
+  };
 
-  pillar = new Pillar( 2000000 );
-  planePosition = [ -112.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
-  this.addAtCoordinate(pillar, planePosition, {scaleToLatitude: true});
+  var scope = this;
 
-  pillar = new Pillar( 1000000 );
-  planePosition = [ -132.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
-  this.addAtCoordinate(pillar, planePosition, {scaleToLatitude: true});
+  // 读取数据
+  this.getJSON( requestParameters, function( err, data ) {
+
+    if( err ) {
+      console.log( err.status + ':' + err.message );
+    }
+    // 如果数据读取成功，添加柱子
+    scope.addPillars( data );
+
+  } )
 
 }
 
@@ -50272,7 +50362,24 @@ PillarLayer.prototype = Object.assign( Object.create( Layer.prototype ), {
 
   constructor: PillarLayer,
 
+  /**
+   * 根据读取到的数据添加柱子
+   * @param  {Object} data 数据源
+   * @return {[type]}      [description]
+   */
+  addPillars: function( data ) {
 
+    var pillar, position;
+    var features = data.features;
+
+    for( var i = 0; i < features.length; i++ ) {
+
+      pillar = new Pillar( features[i].properties.size * 100000 );
+      position = features[i].geometry.coordinates; // 可以有第三个元素，表示离地面的高度
+      this.addAtCoordinate(pillar, position, {scaleToLatitude: true});
+    }
+
+  }
 
 } );
 
@@ -50305,17 +50412,25 @@ function Pillar( height ) {
 }
 
 Pillar.prototype = Object.create( THREE.Mesh.prototype );
+
 Object.defineProperties( Pillar.prototype, {
 
+  // tween.js将修改height属性，来得到柱子长高的动画效果
   height: {
+
     set: function( newValue ) {
+
       // 除了这种方式，morphTargetInfluences可以做到更广义的变形，将来研究下
       this.scale.z = Math.max( newValue, 1 );
       // 每次修改之后都要更新矩阵
       this.updateMatrix();
+
     },
+
     get: function() {
+
       return this.scale.z;
+
     }
   }
 } )
@@ -50323,12 +50438,12 @@ Object.defineProperties( Pillar.prototype, {
 
 module.exports = PillarLayer;
 
-},{"../lib/three.js":4,"../layer.js":9,"../lib/tweenjs.js":10}],3:[function(require,module,exports) {
+},{"../lib/three.js":8,"../layer.js":10,"../lib/tweenjs.js":11}],4:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 var LayerContainer = require( './layercontainer.js' );
 var AutoCamera = require( './autocamera.js' );
-var PillarLayer = require( './layers/pillarlayer.js' );
+// var PillarLayer = require( './layers/pillarlayer.js' );
 
 /*
   MapboxWrapper:  mapboxgl.Map的包装类
@@ -50527,8 +50642,20 @@ Object.assign( MapboxWrapper.prototype, {
 
    },
 
-   /************test************/
-   addLayer: function() {
+   /*
+      添加柱状图层
+      @param options:Object
+   */
+   addLayer: function( options ) {
+
+     // 
+     var subclasses = {
+
+      'pillarlayer': require('./layers/pillarlayer.js'),
+
+     };
+
+     this.layerContainer.add( new subclasses[ options.type ]( options ) )
 
    }
 
@@ -50538,15 +50665,16 @@ Object.assign( MapboxWrapper.prototype, {
 
 module.exports = MapboxWrapper;
 
-},{"./lib/three.js":4,"./constant.js":5,"./layercontainer.js":6,"./autocamera.js":7,"./layers/pillarlayer.js":8}],2:[function(require,module,exports) {
+},{"./lib/three.js":8,"./constant.js":7,"./layercontainer.js":5,"./autocamera.js":6,"./layers/pillarlayer.js":9}],3:[function(require,module,exports) {
+module.exports="/dist/b16fd42e98f196f89ca3e39090000998.geojson";
+},{}],2:[function(require,module,exports) {
 var MapboxWrapper = require( './src/index.js' );
-var THREE = require( './src/lib/three.js' );
+var _json = require( './data/dev.geojson' );
 
 // 使用的是commomjs的规范，模块内的东西都是私有的，所以在dev.html的script中读不到MapboxWrapper
 window.MapboxWrapper = MapboxWrapper;
-window.THREE = THREE;
 
-},{"./src/index.js":3,"./src/lib/three.js":4}],0:[function(require,module,exports) {
+},{"./src/index.js":4,"./data/dev.geojson":3}],0:[function(require,module,exports) {
 var global = (1, eval)('this');
 var OldModule = module.bundle.Module;
 function Module() {
@@ -50564,7 +50692,7 @@ function Module() {
 module.bundle.Module = Module;
 
 if (!module.bundle.parent && typeof WebSocket !== 'undefined') {
-  var ws = new WebSocket('ws://' + window.location.hostname + ':60512/');
+  var ws = new WebSocket('ws://' + window.location.hostname + ':55372/');
   ws.onmessage = function(event) {
     var data = JSON.parse(event.data);
 

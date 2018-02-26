@@ -91,10 +91,15 @@ AutoCamera.prototype = Object.assign( Object.create( THREE.PerspectiveCamera.pro
 
    }
 
-   /*
-     计算投影矩阵的函数 参数就是视锥上下截面夹角，宽高比，近截面，远截面
-     返回一个THREE.Matrix4对象
-   */
+   /**
+    * 计算投影矩阵的函数
+    * @param       {Number} fovy   视锥上下截面夹
+    * @param       {Number} aspect 宽高比
+    * @param       {Number} near   近截面
+    * @param       {Number} far    远截面
+    * @constructor
+    * @return      {THREE.Matrix4}  投影矩阵
+    */
    function _calcPerspectiveMatrix( fovy, aspect, near, far ) {
       var out = new THREE.Matrix4();
       var f = 1.0 / Math.tan( fovy / 2 ),

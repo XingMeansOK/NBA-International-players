@@ -2,24 +2,40 @@ var THREE = require( '../lib/three.js' );
 var Layer = require( '../layer.js' );
 var createjs = require( '../lib/tweenjs.js' );
 
-/*
-  柱子图层，继承自layer
-*/
+/**
+ * 柱子图层，继承自layer
+ * @param       {Object} options 添加图层的数据参数 属性格式参考Mapboxgl 的style layers  https://www.mapbox.com/mapbox-gl-js/style-spec/#layers
+ * @constructor
+ * @example   options { id: 'XX', type: 'pillarlayer'
+                         source:{
+                           type:"geojson",
+                           data:"./XX.geojson" 文件的位置
+                         }
+                       }
+ *
+ * 如果可视化都集中在一个很小的区域，柱子的粗细就要随之变小
+ */
 function PillarLayer( options ) {
 
   Layer.call( this );
 
-  var pillar = new Pillar( 3000000 );
-  var planePosition = [ -102.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
-  this.addAtCoordinate(pillar, planePosition, {scaleToLatitude: true});
+  // 请求参数
+  var requestParameters = {
+    url: options.source.data
+  };
 
-  pillar = new Pillar( 2000000 );
-  planePosition = [ -112.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
-  this.addAtCoordinate(pillar, planePosition, {scaleToLatitude: true});
+  var scope = this;
 
-  pillar = new Pillar( 1000000 );
-  planePosition = [ -132.41356, 37.77577 ]; // 可以有第三个元素，表示离地面的高度
-  this.addAtCoordinate(pillar, planePosition, {scaleToLatitude: true});
+  // 读取数据
+  this.getJSON( requestParameters, function( err, data ) {
+
+    if( err ) {
+      console.log( err.status + ':' + err.message );
+    }
+    // 如果数据读取成功，添加柱子
+    scope.addPillars( data );
+
+  } )
 
 }
 
@@ -27,7 +43,25 @@ PillarLayer.prototype = Object.assign( Object.create( Layer.prototype ), {
 
   constructor: PillarLayer,
 
+  /**
+   * 根据读取到的数据添加柱子
+   * @param  {Object} data 数据源
+   * @return {[type]}      [description]
+   */
+  addPillars: function( data ) {
 
+    var pillar, position;
+    var features = data.features;
+
+    for( var i = 0; i < features.length; i++ ) {
+
+      pillar = new Pillar( features[i].properties.size * 100000 );
+      position = features[i].geometry.coordinates; // 可以有第三个元素，表示离地面的高度
+      this.addAtCoordinate(pillar, position, {scaleToLatitude: true});
+
+    }
+
+  }
 
 } );
 
@@ -60,17 +94,25 @@ function Pillar( height ) {
 }
 
 Pillar.prototype = Object.create( THREE.Mesh.prototype );
+
 Object.defineProperties( Pillar.prototype, {
 
+  // tween.js将修改height属性，来得到柱子长高的动画效果
   height: {
+
     set: function( newValue ) {
+
       // 除了这种方式，morphTargetInfluences可以做到更广义的变形，将来研究下
       this.scale.z = Math.max( newValue, 1 );
       // 每次修改之后都要更新矩阵
       this.updateMatrix();
+
     },
+
     get: function() {
+
       return this.scale.z;
+
     }
   }
 } )

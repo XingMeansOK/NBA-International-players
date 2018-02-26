@@ -14,12 +14,13 @@ Layer.prototype = Object.assign( Object.create( THREE.Group.prototype ), {
 
   constructor: Layer,
 
-  /*
-    在指定位置添加three要素
-    @param obj:Mesh
-    @param lnglat: Array 经纬度
-    @param options: Object
-  */
+  /**
+   * 在指定位置添加three要素
+   * @param  {Object} obj     [Mesh]
+   * @param  {Array} lnglat  [经纬度]
+   * @param  {Object} options [description]
+   * @return {[type]}         [description]
+   */
   addAtCoordinate: function(obj, lnglat, options) {
        var geoGroup = new THREE.Group();
        geoGroup.userData.isGeoGroup = true;
@@ -75,7 +76,9 @@ Layer.prototype = Object.assign( Object.create( THREE.Group.prototype ), {
    },
 
    projectedUnitsPerMeter: function(latitude) {
-       return Math.abs( 512 * ( 1 / Math.cos( latitude * Math.PI / 180 ) ) / 40075000 );
+     // 纬度越高放大越多  threebox中的处理方式，why？？？？？？？
+       // return Math.abs( 512 * ( 1 / Math.cos( latitude * Math.PI / 180 ) ) / 40075000 );
+       return Math.abs( 512 * ( 1 / Math.cos( 45 * Math.PI / 180 ) ) / 40075000 );
        // 40075000是地球周长（单位米）
    },
 
@@ -115,6 +118,77 @@ Layer.prototype = Object.assign( Object.create( THREE.Group.prototype ), {
        return result;
    },
 
+   getJSON: function() {
+
+     /**
+      * 生成一个XMLHttpRequest请求
+      * @param  {Object} requestParameters 请求参数
+      * @return {Object} 返回请求对象
+      */
+     function createRequest( requestParameters ) {
+       var xhr = new window.XMLHttpRequest();
+       xhr.open('GET', requestParameters.url, true);
+       for (var k in requestParameters.headers) {
+         xhr.setRequestHeader(k, requestParameters.headers[k]);
+       }
+
+       // 如果为true，则允许CORS请求发送cookie到服务器  详见 http://www.ruanyifeng.com/blog/2016/04/cors.html
+       xhr.withCredentials = requestParameters.credentials === 'include';
+       return xhr;
+     }
+
+     /**
+      * 读取一个json文件
+      * @param  {Object}   requestParameters 请求参数
+      * @param  {Function} callback          回调函数
+      * @return {[type]}                     [description]
+      *
+      * @example getJSON( { url:'./XXX.json' }, function( err, data ){ ... } )
+      */
+     return function( requestParameters, callback ) {
+
+       var xhr = createRequest( requestParameters );
+       xhr.setRequestHeader('Accept', 'application/json');
+       xhr.onerror = function() {
+         callback( new Error( xhr.statusText ) );
+       };
+       xhr.onload = function() {
+          // 成功执行区域
+          // 2XX表示有效响应
+          // 304意味着是从缓存读取
+         if ( xhr.status >= 200 && xhr.status < 300 && xhr.response ) { // 请求成功
+           var data;
+           try {
+             data = JSON.parse( xhr.response );
+           } catch ( err ) {
+             return callback( err );
+           }
+           callback( null, data );
+         } else { // 请求失败
+           callback( new AJAXError( xhr.statusText, xhr.status ) );
+         }
+       };
+       xhr.send();
+       return xhr;
+     }
+
+   }(),
+
+
+
 } )
+
+/**
+ * Ajax请求错误对象
+ * @param       {string} message 关于错误的描述
+ * @param       {number} status  响应状态码
+ * @constructor
+ */
+function AJAXError( message, status ) {
+  Error.call( this, message );
+  this.status = status;
+}
+
+AJAXError.prototype = Object.create( Error.prototype );
 
 module.exports = Layer;
