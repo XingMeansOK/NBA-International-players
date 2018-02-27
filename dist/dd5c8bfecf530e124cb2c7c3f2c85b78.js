@@ -69,7 +69,7 @@ require = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({8:[function(require,module,exports) {
+})({10:[function(require,module,exports) {
 var global = (1,eval)("this");
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -46055,7 +46055,7 @@ var global = (1,eval)("this");
 
 })));
 
-},{}],7:[function(require,module,exports) {
+},{}],6:[function(require,module,exports) {
 var WORLD_SIZE = 512;
 var MERCATOR_A = 6378137.0;
 
@@ -46070,7 +46070,7 @@ var constants = {
 
 module.exports = constants;
 
-},{}],5:[function(require,module,exports) {
+},{}],7:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 
@@ -46092,6 +46092,15 @@ function LayerContainer( map ) {
   THREE.Group.call( this );
 
   this.map = map;
+
+  // 漫反射光
+  this.add( new THREE.AmbientLight( 0xcccccc ) );
+  // 方向光
+  var sunlight = new THREE.DirectionalLight(0xffffff, 0.5);
+  sunlight.position.set(0,800,1000); // 没有设置target，默认指向scene原点的一个object3d对象
+  sunlight.matrixWorldNeedsUpdate = true;
+  this.add(sunlight);
+
 
   /****初始化顶层节点的变换矩阵，为了同步mapbox****/
 
@@ -46136,6 +46145,12 @@ LayerContainer.prototype = Object.assign( Object.create( THREE.Group.prototype )
           .premultiply( scale )
           .premultiply( translateMap )
 
+      top.matrixWorldNeedsUpdate = true; // 如果不设置为true就是不会更新matrixWorld，但是没影响啊，为啥？？？？？？
+      /**
+       * 为什么这里修改的是matrix而不是像相机一样修改matrixWorld？
+       * 实际上是一样的。因为layerContainer的父节点就是scene了，而scene没有任何变换
+       */
+
     }
 
     // 先同步一次
@@ -46149,7 +46164,7 @@ LayerContainer.prototype = Object.assign( Object.create( THREE.Group.prototype )
 
 module.exports = LayerContainer;
 
-},{"./lib/three.js":8,"./constant.js":7}],6:[function(require,module,exports) {
+},{"./lib/three.js":10,"./constant.js":6}],8:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 
 /*
@@ -46243,10 +46258,15 @@ AutoCamera.prototype = Object.assign( Object.create( THREE.PerspectiveCamera.pro
 
    }
 
-   /*
-     计算投影矩阵的函数 参数就是视锥上下截面夹角，宽高比，近截面，远截面
-     返回一个THREE.Matrix4对象
-   */
+   /**
+    * 计算投影矩阵的函数
+    * @param       {Number} fovy   视锥上下截面夹
+    * @param       {Number} aspect 宽高比
+    * @param       {Number} near   近截面
+    * @param       {Number} far    远截面
+    * @constructor
+    * @return      {THREE.Matrix4}  投影矩阵
+    */
    function _calcPerspectiveMatrix( fovy, aspect, near, far ) {
       var out = new THREE.Matrix4();
       var f = 1.0 / Math.tan( fovy / 2 ),
@@ -46281,7 +46301,7 @@ AutoCamera.prototype = Object.assign( Object.create( THREE.PerspectiveCamera.pro
 
 module.exports = AutoCamera;
 
-},{"./lib/three.js":8}],10:[function(require,module,exports) {
+},{"./lib/three.js":10}],11:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 
@@ -46360,7 +46380,7 @@ Layer.prototype = Object.assign( Object.create( THREE.Group.prototype ), {
    },
 
    projectedUnitsPerMeter: function(latitude) {
-     // 纬度越高放大越多
+     // 纬度越高放大越多  threebox中的处理方式，why？？？？？？？
        // return Math.abs( 512 * ( 1 / Math.cos( latitude * Math.PI / 180 ) ) / 40075000 );
        return Math.abs( 512 * ( 1 / Math.cos( 45 * Math.PI / 180 ) ) / 40075000 );
        // 40075000是地球周长（单位米）
@@ -46477,7 +46497,7 @@ AJAXError.prototype = Object.create( Error.prototype );
 
 module.exports = Layer;
 
-},{"./lib/three.js":8,"./constant.js":7}],11:[function(require,module,exports) {
+},{"./lib/three.js":10,"./constant.js":6}],12:[function(require,module,exports) {
 /*!
 * TweenJS
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -50377,6 +50397,7 @@ PillarLayer.prototype = Object.assign( Object.create( Layer.prototype ), {
       pillar = new Pillar( features[i].properties.size * 100000 );
       position = features[i].geometry.coordinates; // 可以有第三个元素，表示离地面的高度
       this.addAtCoordinate(pillar, position, {scaleToLatitude: true});
+
     }
 
   }
@@ -50397,7 +50418,13 @@ function Pillar( height ) {
   // 相当于修改几何体的中心点位置，原来的中心是在几何体的中心，现在是在nz面的中心
 
   // 柱子的材质
-  var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+  // var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+  var material = new THREE.MeshPhongMaterial( {
+    color: 0x7777ff,
+    specular:0x7777ff,
+    shininess:30
+   } )
+
   THREE.Mesh.call( this, geometry, material );
 
   // this.scale.z就代表了柱子所代表的数据大小
@@ -50438,7 +50465,7 @@ Object.defineProperties( Pillar.prototype, {
 
 module.exports = PillarLayer;
 
-},{"../lib/three.js":8,"../layer.js":10,"../lib/tweenjs.js":11}],4:[function(require,module,exports) {
+},{"../lib/three.js":10,"../layer.js":11,"../lib/tweenjs.js":12}],3:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 var LayerContainer = require( './layercontainer.js' );
@@ -50532,6 +50559,7 @@ Object.assign( MapboxWrapper.prototype, {
 
   }(),
 
+  // 迁移至LayerContainer
   /*
     在指定位置添加three要素
     @param obj:Mesh
@@ -50550,6 +50578,7 @@ Object.assign( MapboxWrapper.prototype, {
 
        return obj;
    },
+   // 迁移至LayerContainer
    moveToCoordinate: function(obj, lnglat, options) {
        /** Place the given object on the map, centered around the provided longitude and latitude
            The object's internal coordinates are assumed to be in meter-offset format, meaning
@@ -50591,11 +50620,13 @@ Object.assign( MapboxWrapper.prototype, {
        return obj;
    },
 
+   // 迁移至LayerContainer
    projectedUnitsPerMeter: function(latitude) {
        return Math.abs( 512 * ( 1 / Math.cos( latitude * Math.PI / 180 ) ) / 40075000 );
        // 40075000是地球周长（单位米）
    },
 
+   // 迁移至LayerContainer
    projectToWorld: function (coords){
        // Spherical mercator forward projection, re-scaling to WORLD_SIZE
        /*
@@ -50648,7 +50679,7 @@ Object.assign( MapboxWrapper.prototype, {
    */
    addLayer: function( options ) {
 
-     // 
+     //
      var subclasses = {
 
       'pillarlayer': require('./layers/pillarlayer.js'),
@@ -50665,7 +50696,7 @@ Object.assign( MapboxWrapper.prototype, {
 
 module.exports = MapboxWrapper;
 
-},{"./lib/three.js":8,"./constant.js":7,"./layercontainer.js":5,"./autocamera.js":6,"./layers/pillarlayer.js":9}],3:[function(require,module,exports) {
+},{"./lib/three.js":10,"./constant.js":6,"./layercontainer.js":7,"./autocamera.js":8,"./layers/pillarlayer.js":9}],4:[function(require,module,exports) {
 module.exports="/dist/b16fd42e98f196f89ca3e39090000998.geojson";
 },{}],2:[function(require,module,exports) {
 var MapboxWrapper = require( './src/index.js' );
@@ -50674,7 +50705,7 @@ var _json = require( './data/dev.geojson' );
 // 使用的是commomjs的规范，模块内的东西都是私有的，所以在dev.html的script中读不到MapboxWrapper
 window.MapboxWrapper = MapboxWrapper;
 
-},{"./src/index.js":4,"./data/dev.geojson":3}],0:[function(require,module,exports) {
+},{"./src/index.js":3,"./data/dev.geojson":4}],0:[function(require,module,exports) {
 var global = (1, eval)('this');
 var OldModule = module.bundle.Module;
 function Module() {
@@ -50692,7 +50723,7 @@ function Module() {
 module.bundle.Module = Module;
 
 if (!module.bundle.parent && typeof WebSocket !== 'undefined') {
-  var ws = new WebSocket('ws://' + window.location.hostname + ':55372/');
+  var ws = new WebSocket('ws://' + window.location.hostname + ':49240/');
   ws.onmessage = function(event) {
     var data = JSON.parse(event.data);
 

@@ -79,7 +79,13 @@ function Pillar( height ) {
   // 相当于修改几何体的中心点位置，原来的中心是在几何体的中心，现在是在nz面的中心
 
   // 柱子的材质
-  var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+  // var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+  var material = new THREE.MeshPhongMaterial( {
+    color: 0x7777ff,
+    specular:0x7777ff,
+    shininess:30
+   } )
+
   THREE.Mesh.call( this, geometry, material );
 
   // this.scale.z就代表了柱子所代表的数据大小

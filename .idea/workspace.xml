@@ -2,21 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b54fe669-1bdc-493a-a6d4-9b3c96485588" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/index0.js" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache/93900d1c54008fa732b8fd9353af697a.json" afterPath="$PROJECT_DIR$/.cache/93900d1c54008fa732b8fd9353af697a.json" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache/1b88a243de34272de4abb6216df291c1.json" afterPath="$PROJECT_DIR$/.cache/1b88a243de34272de4abb6216df291c1.json" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache/8bd2d1d25f68ce094c7d8ff598113ab0.json" afterPath="$PROJECT_DIR$/.cache/8bd2d1d25f68ce094c7d8ff598113ab0.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache/af7273d051fe6bf26f3932f8ae790685.json" afterPath="$PROJECT_DIR$/.cache/af7273d051fe6bf26f3932f8ae790685.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache/b0900cc46d33aa33ce968d95b061b609.json" afterPath="$PROJECT_DIR$/.cache/b0900cc46d33aa33ce968d95b061b609.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache/b1a1110693308f528b511eda2a458284.json" afterPath="$PROJECT_DIR$/.cache/b1a1110693308f528b511eda2a458284.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache/c2be4754866716de82f745e3ca86f0b3.json" afterPath="$PROJECT_DIR$/.cache/c2be4754866716de82f745e3ca86f0b3.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dev.html" afterPath="$PROJECT_DIR$/dev.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dev_index.js" afterPath="$PROJECT_DIR$/dev_index.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/dd5c8bfecf530e124cb2c7c3f2c85b78.js" afterPath="$PROJECT_DIR$/dist/dd5c8bfecf530e124cb2c7c3f2c85b78.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/dev.html" afterPath="$PROJECT_DIR$/dist/dev.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/index.js" afterPath="$PROJECT_DIR$/src/index.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/layer.js" afterPath="$PROJECT_DIR$/src/layer.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/layers/pillarlayer.js" afterPath="$PROJECT_DIR$/src/layers/pillarlayer.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/layercontainer.js" afterPath="$PROJECT_DIR$/src/layercontainer.js" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -129,7 +121,7 @@
   <component name="PropertiesComponent">
     <property name="settings.editor.selected.configurable" value="configurable.group.appearance" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../threebox" />
     <property name="HbShouldOpenHtmlAsHb" value="" />
   </component>
   <component name="RunDashboard">
@@ -224,12 +216,12 @@
       <updated>1516714552740</updated>
       <workItem from="1516714554066" duration="623000" />
       <workItem from="1519570396285" duration="153000" />
-      <workItem from="1519608853297" duration="720000" />
+      <workItem from="1519608853297" duration="728000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="1496000" />
+    <option name="totallyTimeSpent" value="1504000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-9" y="-9" width="1938" height="1048" extended-state="6" />
