@@ -69,7 +69,7 @@ require = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({10:[function(require,module,exports) {
+})({8:[function(require,module,exports) {
 var global = (1,eval)("this");
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -46055,7 +46055,7 @@ var global = (1,eval)("this");
 
 })));
 
-},{}],6:[function(require,module,exports) {
+},{}],5:[function(require,module,exports) {
 var WORLD_SIZE = 512;
 var MERCATOR_A = 6378137.0;
 
@@ -46070,7 +46070,7 @@ var constants = {
 
 module.exports = constants;
 
-},{}],7:[function(require,module,exports) {
+},{}],6:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 
@@ -46085,7 +46085,14 @@ var constants = require( './constant.js' );
     LayerContainer继承自Three的Group类
     @param map：Mapboxgl Map对象
 */
-function LayerContainer( map ) {
+/**
+ *     LayerContainer是所有图层的根节点，为了配合mapbox，LayerContainer还包含了坐标变换
+ *     LayerContainer继承自Three的Group类
+ * @param       {Mapboxgl Map} map    Mapboxgl Map对象
+ * @param       {THREE.PespectiveCamera} camera THREE场景的摄像机
+ * @constructor
+ */
+function LayerContainer( map, camera ) {
 
   if( !map ) return;
 
@@ -46110,6 +46117,11 @@ function LayerContainer( map ) {
   this.matrixAutoUpdate = false;
   // 开始与map保持同步
   this.syncStart();
+
+  /**
+   * 添加raycaster鼠标交互
+   */
+  this.raycasterStart( camera );
 
 }
 
@@ -46160,11 +46172,76 @@ LayerContainer.prototype = Object.assign( Object.create( THREE.Group.prototype )
 
   },
 
+  /**
+   * 执行该函数之后，raycaster开始工作
+   * @param {THREE.PespectiveCamera} camera Three场景的摄像机
+   * @return {[type]} [description]
+   *
+   * 将来需要处理下兼容性问题
+   */
+  raycasterStart: function( camera ) {
+
+    // 初始化射线
+    var raycaster = new THREE.Raycaster();
+    // 用于保存鼠标位置的向量
+    var mouse = new THREE.Vector2();
+    // 用于保存three画布的宽高
+    var SCREEN_WIDTH, SCREEN_HEIGHT;
+    // 持有当前LayerContainer对象的引用
+    var top = this;
+    // picking ray找到的离摄像机最近的Object3D对象
+    var nearest;
+
+    // 处理鼠标移动
+    document.addEventListener( 'mousemove', _r, false );
+
+    function _r( event ) {
+
+      if( top.children.length < 3 ) return; // 除了两个灯光之外没有其他子节点了，也就是没有加任何图层
+
+      event.preventDefault();
+
+      if( nearest && 'highlight' in nearest ) nearest.highlight = false;
+
+      // 获取canvas尺寸（可能由于窗口变化而变化）
+      SCREEN_WIDTH = top.map.transform.width;
+      SCREEN_HEIGHT = top.map.transform.height;
+
+      // 鼠标的屏幕坐标转化为规格化设备坐标：坐标范围在-1到1之间
+      mouse.x = ( event.clientX / SCREEN_WIDTH ) * 2 - 1;
+      mouse.y = - ( event.clientY / SCREEN_HEIGHT ) * 2 + 1;
+      /*
+        屏幕坐标（原点在左上角，x指向右，y指向下）到规格化设备坐标NDC（原点在屏幕中心，xy都是-1到1）的坐标转换
+        x，y为屏幕坐标，XY为NDC坐标，WH为屏幕宽高，这里认为画布是充满整个window
+        1.屏幕坐标区间长度映射到2：
+          2x/w，2y/h，也就是x坐标区间由0-W变为0-2，y由0-H变为0-2
+        2.变换坐标原点：
+          2x/w - 1, 2y/h -1
+        3.改变y轴方向：
+          2x/w - 1, -2y/h + 1
+      */
+
+      raycaster.setFromCamera( mouse, camera );
+      // 获取LayerContainer中与picking ray相交的子节点的集合； 第二个true表示同时迭代子节点
+      var intersects = raycaster.intersectObjects( top.children, true ); // 返回结果[ { distance, point, face, faceIndex, indices, object }, ... ]
+
+      if (!intersects[0]) return
+
+      nearest = intersects[0].object;
+      // 高光显示选中的物体
+      if( 'highlight' in nearest ) nearest.highlight = true;
+      // console.log( nearest );
+
+
+    }
+
+  }
+
 } );
 
 module.exports = LayerContainer;
 
-},{"./lib/three.js":10,"./constant.js":6}],8:[function(require,module,exports) {
+},{"./lib/three.js":8,"./constant.js":5}],7:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 
 /*
@@ -46301,7 +46378,7 @@ AutoCamera.prototype = Object.assign( Object.create( THREE.PerspectiveCamera.pro
 
 module.exports = AutoCamera;
 
-},{"./lib/three.js":10}],11:[function(require,module,exports) {
+},{"./lib/three.js":8}],10:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 
@@ -46497,7 +46574,7 @@ AJAXError.prototype = Object.create( Error.prototype );
 
 module.exports = Layer;
 
-},{"./lib/three.js":10,"./constant.js":6}],12:[function(require,module,exports) {
+},{"./lib/three.js":8,"./constant.js":5}],11:[function(require,module,exports) {
 /*!
 * TweenJS
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -50417,15 +50494,9 @@ function Pillar( height ) {
   // 初始的几何体的中心是和世界坐标的原点重合的，这里沿z轴正方向平移，立方体的nz面和世界坐标的原点重合
   // 相当于修改几何体的中心点位置，原来的中心是在几何体的中心，现在是在nz面的中心
 
-  // 柱子的材质
-  // var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-  var material = new THREE.MeshPhongMaterial( {
-    color: 0x7777ff,
-    specular:0x7777ff,
-    shininess:30
-   } )
+  this.highlight = this._highlight = false;
 
-  THREE.Mesh.call( this, geometry, material );
+  THREE.Mesh.call( this, geometry, this.material );
 
   // this.scale.z就代表了柱子所代表的数据大小
   this.scale.z = 1; // 因为tween是从当前值变化到目标值，所以要先设置下当前值
@@ -50459,13 +50530,46 @@ Object.defineProperties( Pillar.prototype, {
       return this.scale.z;
 
     }
+  },
+
+  // 用于设置柱子是否高光显示
+  highlight: {
+
+    set: function() {
+
+      // 柱子的高光显示材质
+      var highlightMaterial = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+      // 柱子的常规材质
+      var material = new THREE.MeshPhongMaterial( {
+        color: 0x7777ff,
+        specular:0x7777ff,
+        shininess:30
+       } )
+
+      return function( newValue ) {
+
+        debugger
+        this.material = newValue? highlightMaterial : material;
+        this._highlight = newValue;
+
+      }
+
+    }(),
+
+    get: function() {
+
+      return this._highlight;
+
+    }
+
   }
+
 } )
 
 
 module.exports = PillarLayer;
 
-},{"../lib/three.js":10,"../layer.js":11,"../lib/tweenjs.js":12}],3:[function(require,module,exports) {
+},{"../lib/three.js":8,"../layer.js":10,"../lib/tweenjs.js":11}],3:[function(require,module,exports) {
 var THREE = require( './lib/three.js' );
 var constants = require( './constant.js' );
 var LayerContainer = require( './layercontainer.js' );
@@ -50511,17 +50615,18 @@ function MapboxWrapper( map ) {
   renderer.domElement.style[ 'pointer-events' ] = 'none';
   renderer.domElement.style[ 'z-index' ] = '999';
 
-  /*****创建场景*****/
-
-  this.scene = new THREE.Scene();
-  // 自动同步map的平移、缩放变换（model矩阵）
-  this.layerContainer = new LayerContainer( map ); // scene下的顶层根节点，所有绘制的three object3d都包含在其中
-  this.scene.add( this.layerContainer );
-
   /********创建一个和mapboxgl的摄像机完全同步的摄像机*********/
 
   // 自动同步vp矩阵（视图矩阵和投影矩阵）
   this.camera = new AutoCamera( map );
+
+  /*****创建场景*****/
+
+  this.scene = new THREE.Scene();
+  // 自动同步map的平移、缩放变换（model矩阵）
+  this.layerContainer = new LayerContainer( map, this.camera ); // scene下的顶层根节点，所有绘制的three object3d都包含在其中
+  this.scene.add( this.layerContainer );
+
 
   /********渲染场景*********/
 
@@ -50696,7 +50801,7 @@ Object.assign( MapboxWrapper.prototype, {
 
 module.exports = MapboxWrapper;
 
-},{"./lib/three.js":10,"./constant.js":6,"./layercontainer.js":7,"./autocamera.js":8,"./layers/pillarlayer.js":9}],4:[function(require,module,exports) {
+},{"./lib/three.js":8,"./constant.js":5,"./layercontainer.js":6,"./autocamera.js":7,"./layers/pillarlayer.js":9}],4:[function(require,module,exports) {
 module.exports="/dist/b16fd42e98f196f89ca3e39090000998.geojson";
 },{}],2:[function(require,module,exports) {
 var MapboxWrapper = require( './src/index.js' );
@@ -50723,7 +50828,7 @@ function Module() {
 module.bundle.Module = Module;
 
 if (!module.bundle.parent && typeof WebSocket !== 'undefined') {
-  var ws = new WebSocket('ws://' + window.location.hostname + ':49240/');
+  var ws = new WebSocket('ws://' + window.location.hostname + ':65464/');
   ws.onmessage = function(event) {
     var data = JSON.parse(event.data);
 

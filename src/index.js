@@ -43,17 +43,18 @@ function MapboxWrapper( map ) {
   renderer.domElement.style[ 'pointer-events' ] = 'none';
   renderer.domElement.style[ 'z-index' ] = '999';
 
-  /*****创建场景*****/
-
-  this.scene = new THREE.Scene();
-  // 自动同步map的平移、缩放变换（model矩阵）
-  this.layerContainer = new LayerContainer( map ); // scene下的顶层根节点，所有绘制的three object3d都包含在其中
-  this.scene.add( this.layerContainer );
-
   /********创建一个和mapboxgl的摄像机完全同步的摄像机*********/
 
   // 自动同步vp矩阵（视图矩阵和投影矩阵）
   this.camera = new AutoCamera( map );
+
+  /*****创建场景*****/
+
+  this.scene = new THREE.Scene();
+  // 自动同步map的平移、缩放变换（model矩阵）
+  this.layerContainer = new LayerContainer( map, this.camera ); // scene下的顶层根节点，所有绘制的three object3d都包含在其中
+  this.scene.add( this.layerContainer );
+
 
   /********渲染场景*********/
 

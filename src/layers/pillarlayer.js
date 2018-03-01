@@ -78,15 +78,9 @@ function Pillar( height ) {
   // 初始的几何体的中心是和世界坐标的原点重合的，这里沿z轴正方向平移，立方体的nz面和世界坐标的原点重合
   // 相当于修改几何体的中心点位置，原来的中心是在几何体的中心，现在是在nz面的中心
 
-  // 柱子的材质
-  // var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-  var material = new THREE.MeshPhongMaterial( {
-    color: 0x7777ff,
-    specular:0x7777ff,
-    shininess:30
-   } )
+  this.highlight = this._highlight = false;
 
-  THREE.Mesh.call( this, geometry, material );
+  THREE.Mesh.call( this, geometry, this.material );
 
   // this.scale.z就代表了柱子所代表的数据大小
   this.scale.z = 1; // 因为tween是从当前值变化到目标值，所以要先设置下当前值
@@ -120,7 +114,40 @@ Object.defineProperties( Pillar.prototype, {
       return this.scale.z;
 
     }
+  },
+
+  // 用于设置柱子是否高光显示
+  highlight: {
+
+    set: function() {
+
+      // 柱子的高光显示材质
+      var highlightMaterial = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+      // 柱子的常规材质
+      var material = new THREE.MeshPhongMaterial( {
+        color: 0x7777ff,
+        specular:0x7777ff,
+        shininess:30
+       } )
+
+      return function( newValue ) {
+
+        debugger
+        this.material = newValue? highlightMaterial : material;
+        this._highlight = newValue;
+
+      }
+
+    }(),
+
+    get: function() {
+
+      return this._highlight;
+
+    }
+
   }
+
 } )
 
 

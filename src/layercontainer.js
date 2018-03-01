@@ -12,7 +12,14 @@ var constants = require( './constant.js' );
     LayerContainer继承自Three的Group类
     @param map：Mapboxgl Map对象
 */
-function LayerContainer( map ) {
+/**
+ *     LayerContainer是所有图层的根节点，为了配合mapbox，LayerContainer还包含了坐标变换
+ *     LayerContainer继承自Three的Group类
+ * @param       {Mapboxgl Map} map    Mapboxgl Map对象
+ * @param       {THREE.PespectiveCamera} camera THREE场景的摄像机
+ * @constructor
+ */
+function LayerContainer( map, camera ) {
 
   if( !map ) return;
 
@@ -37,6 +44,11 @@ function LayerContainer( map ) {
   this.matrixAutoUpdate = false;
   // 开始与map保持同步
   this.syncStart();
+
+  /**
+   * 添加raycaster鼠标交互
+   */
+  this.raycasterStart( camera );
 
 }
 
@@ -86,6 +98,71 @@ LayerContainer.prototype = Object.assign( Object.create( THREE.Group.prototype )
     this.map.on( 'move', function() { _synchronize(); } )
 
   },
+
+  /**
+   * 执行该函数之后，raycaster开始工作
+   * @param {THREE.PespectiveCamera} camera Three场景的摄像机
+   * @return {[type]} [description]
+   *
+   * 将来需要处理下兼容性问题
+   */
+  raycasterStart: function( camera ) {
+
+    // 初始化射线
+    var raycaster = new THREE.Raycaster();
+    // 用于保存鼠标位置的向量
+    var mouse = new THREE.Vector2();
+    // 用于保存three画布的宽高
+    var SCREEN_WIDTH, SCREEN_HEIGHT;
+    // 持有当前LayerContainer对象的引用
+    var top = this;
+    // picking ray找到的离摄像机最近的Object3D对象
+    var nearest;
+
+    // 处理鼠标移动
+    document.addEventListener( 'mousemove', _r, false );
+
+    function _r( event ) {
+
+      if( top.children.length < 3 ) return; // 除了两个灯光之外没有其他子节点了，也就是没有加任何图层
+
+      event.preventDefault();
+
+      if( nearest && 'highlight' in nearest ) nearest.highlight = false;
+
+      // 获取canvas尺寸（可能由于窗口变化而变化）
+      SCREEN_WIDTH = top.map.transform.width;
+      SCREEN_HEIGHT = top.map.transform.height;
+
+      // 鼠标的屏幕坐标转化为规格化设备坐标：坐标范围在-1到1之间
+      mouse.x = ( event.clientX / SCREEN_WIDTH ) * 2 - 1;
+      mouse.y = - ( event.clientY / SCREEN_HEIGHT ) * 2 + 1;
+      /*
+        屏幕坐标（原点在左上角，x指向右，y指向下）到规格化设备坐标NDC（原点在屏幕中心，xy都是-1到1）的坐标转换
+        x，y为屏幕坐标，XY为NDC坐标，WH为屏幕宽高，这里认为画布是充满整个window
+        1.屏幕坐标区间长度映射到2：
+          2x/w，2y/h，也就是x坐标区间由0-W变为0-2，y由0-H变为0-2
+        2.变换坐标原点：
+          2x/w - 1, 2y/h -1
+        3.改变y轴方向：
+          2x/w - 1, -2y/h + 1
+      */
+
+      raycaster.setFromCamera( mouse, camera );
+      // 获取LayerContainer中与picking ray相交的子节点的集合； 第二个true表示同时迭代子节点
+      var intersects = raycaster.intersectObjects( top.children, true ); // 返回结果[ { distance, point, face, faceIndex, indices, object }, ... ]
+
+      if (!intersects[0]) return
+
+      nearest = intersects[0].object;
+      // 高光显示选中的物体
+      if( 'highlight' in nearest ) nearest.highlight = true;
+      // console.log( nearest );
+
+
+    }
+
+  }
 
 } );
 
